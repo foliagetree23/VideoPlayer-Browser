@@ -356,6 +356,6 @@ This project is licensed under the ISC License - see the [LICENSE](LICENSE) file
 
 **⭐ If you find this project useful, please consider giving it a star on GitHub! ⭐**
 
-Made with ❤️ by [Your Name](https://github.com/your-username)
+Made with ❤️ by [Foliage Tree](https://github.com/foliagetree23)
 
 </div>
