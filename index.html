@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Video Player Web</title>
+  <style>
+    :root {
+      --color-bg: #111;
+      --color-text-main: #eee;
+      --color-text-secondary: #ccc;
+      --color-text-button: white;
+      --color-fill-icon: #FFFFFF;
+      --color-fill-icon-secondary: #ccc;
+      --color-fill-icon-main: #ddd;
+      --color-bg-container: #333;
+      --color-bg-video: black;
+      --color-bg-playlist: #222;
+      --color-bg-controls: #444;
+      --color-bg-hover: #444;
+      --color-bg-playing: #555;
+      --color-button: #555;
+      --color-button-hover: #777;
+      --color-button-active: #007bff;
+      --color-icon-hover: #2196F3;
+      --color-delete-hover: #ff6347;
+      --color-shadow: rgba(0,0,0,0.7);
+      --scrollbar-track: #2c2c2c;
+      --scrollbar-thumb: #555;
+      --scrollbar-thumb-hover: #777;
+    }
+
+    body.light-mode {
+      --color-bg: #f9f9f9;
+      --color-text-main: #333;
+      --color-text-secondary: #555;
+      --color-text-button: #333;
+      --color-fill-icon: #333;
+      --color-fill-icon-secondary: #555;
+      --color-fill-icon-main: #555;
+      --color-bg-container: #fff;
+      --color-bg-video: black;
+      --color-bg-playlist: #f0f0f0;
+      --color-bg-controls: #e9e9e9;
+      --color-bg-hover: #ddd;
+      --color-bg-playing: #ccc;
+      --color-button: #ddd;
+      --color-button-hover: #bbb;
+      --color-button-active: #007bff;
+      --color-icon-hover: #007bff;
+      --color-delete-hover: #e53935;
+      --color-shadow: rgba(0,0,0,0.1);
+      --scrollbar-track: #e0e0e0;
+      --scrollbar-thumb: #ccc;
+      --scrollbar-thumb-hover: #aaa;
+    }
+    body {
+      background-color: var(--color-bg);
+      color: var(--color-text-main);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      overflow: hidden; /* Prevent the whole page from scrolling */
+      transition: background-color 0.3s, color 0.3s;
+    }
+    .main-container {
+      display: flex;
+      gap: 20px;
+      width: 95%;
+      max-width: 1200px;
+      height: 90vh;
+      max-height: 800px;
+    }
+    .video-container {
+      flex-grow: 1;
+      background: var(--color-bg-container);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 0 10px var(--color-shadow);
+      display: flex;
+      flex-direction: column;
+      transition: background-color 0.3s;
+    }
+    .video-wrapper {
+      position: relative;
+      padding-top: 56.25%; /* 16:9 Aspect Ratio */
+      background-color: var(--color-bg-video);
+    }
+    video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .playlist-container {
+      width: 300px;
+      background: var(--color-bg-playlist);
+      border-radius: 8px;
+      padding: 10px;
+      overflow: hidden; /* Changed from auto to hide main scrollbar */
+      box-shadow: 0 0 10px var(--color-shadow);
+      display: flex;
+      flex-direction: column;
+      transition: background-color 0.3s;
+    }
+    .playlist-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding: 0 5px;
+    }
+    .playlist-header h4 {
+      margin: 0;
+      font-weight: bold;
+      color: var(--color-text-secondary);
+    }
+    #add-video-icon-btn {
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #add-video-icon-btn:hover {
+      background-color: var(--color-bg-hover);
+    }
+    #add-video-icon-btn svg {
+       fill: var(--color-fill-icon-secondary);
+       width: 20px;
+       height: 20px;
+    }
+    #playlist-items {
+      flex-grow: 1; 
+      overflow-y: auto;
+      /* Custom Scrollbar for Firefox */
+      scrollbar-width: thin;
+      scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+    }
+
+    /* Custom Scrollbar for Webkit Browsers */
+    #playlist-items::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    #playlist-items::-webkit-scrollbar-track {
+      background: var(--scrollbar-track);
+      border-radius: 4px;
+    }
+
+    #playlist-items::-webkit-scrollbar-thumb {
+      background: var(--scrollbar-thumb);
+      border-radius: 4px;
+    }
+
+    #playlist-items::-webkit-scrollbar-thumb:hover {
+      background: var(--scrollbar-thumb-hover);
+    }
+    .playlist-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      cursor: pointer;
+      border-radius: 4px;
+      margin-bottom: 5px;
+      background: var(--color-bg-container);
+      white-space: nowrap;
+      overflow: hidden;
+      transition: background-color 0.3s;
+    }
+    .playlist-item-name {
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .delete-btn {
+      padding: 2px 5px;
+      margin-left: 10px;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    .delete-btn svg {
+        fill: var(--color-fill-icon);
+    }
+    .delete-btn:hover svg {
+      fill: var(--color-delete-hover);
+    }
+    .playlist-item:hover {
+      background: var(--color-bg-hover);
+    }
+    .playlist-item.playing {
+      background: var(--color-bg-playing);
+      font-weight: bold;
+    }
+    .controls {
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+      background: var(--color-bg-controls);
+      user-select: none;
+      transition: background-color 0.3s;
+    }
+    .controls > * {
+      margin: 5px 0;
+    }
+    .buttons {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    button {
+      background: var(--color-button);
+      border: none;
+      color: var(--color-text-button);
+      padding: 8px 12px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    button svg {
+        fill: var(--color-fill-icon);
+    }
+    button:hover {
+      background: var(--color-button-hover);
+    }
+    button:hover svg {
+      fill: var(--color-icon-hover);
+    }
+    button.active {
+      background: var(--color-button-active);
+    }
+    input[type="range"] {
+      width: 100%;
+      cursor: pointer;
+    }
+    .time {
+      font-size: 14px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    #file-input-label {
+      cursor: pointer;
+      margin-left: auto;
+      padding: 5px;
+    }
+    #file-input-label svg {
+      width: 28px;
+      height: 28px;
+      fill: var(--color-fill-icon-main);
+      transition: fill 0.2s;
+    }
+    #file-input-label:hover svg {
+      fill: var(--color-icon-hover);
+    }
+    #speed-control {
+      background: var(--color-button);
+      color: var(--color-text-button);
+      border: none;
+      border-radius: 4px;
+      padding: 5px;
+      margin-left: 10px;
+      cursor: pointer;
+    }
+    #speed-control:hover {
+      background: var(--color-button-hover);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="main-container">
+    <div class="video-container">
+      <div class="video-wrapper">
+        <video id="video" preload="metadata" tabindex="0">
+          Your browser does not support the video tag.
+        </video>
+      </div>
+      <div class="controls">
+        <div class="buttons">
+          <button id="prev-video" aria-label="Previous Video"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#FFFFFF"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M6 6h2v12H6zm3.5 6l8.5 6V6l-8.5 6z"/></svg></button>
+          <button id="skip-backward" title="Skip 10s Backward">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#FFFFFF"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg>
+          </button>
+          <button id="play-pause" aria-label="Play/Pause">
+            <svg id="play-icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#FFFFFF"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M8 5v14l11-7L8 5z"/></svg>
+            <svg id="pause-icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#FFFFFF" style="display: none;"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+          </button>
+          <button id="skip-forward" title="Skip 10s Forward">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#FFFFFF"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg>
+          </button>
+          <button id="next-video" aria-label="Next Video"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#FFFFFF"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
+          <button id="mute-unmute" aria-label="Mute/Unmute" style="margin-left: 10px;">
+            <svg id="unmute-icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#FFFFFF"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+            <svg id="mute-icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#FFFFFF" style="display: none;"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L7 9H3v6h4l5 5v-6.73l-5-5z"/></svg>
+          </button>
+
+          <button id="pip-btn" aria-label="Picture-in-Picture" title="Picture-in-Picture">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#FFFFFF"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M19 7h-8v6h8V7zm2-4H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14z"/></svg>
+          </button>
+          <button id="fullscreen-btn" aria-label="Fullscreen" title="Toggle Fullscreen">
+            <svg id="fullscreen-icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#FFFFFF"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M3 21v-5h2v3h3v2zm13 0v-2h3v-3h2v5zM3 8V3h5v2H5v3zm16 0V5h-3V3h5v5z"/></svg>
+            <svg id="exit-fullscreen-icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#FFFFFF" style="display: none;"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M6 21v-3H3v-2h5v5zm10 0v-5h5v2h-3v3zM3 8V6h3V3h2v5zm13 0V3h2v3h3v2z"/></svg>
+          </button>
+        </div>
+        <input type="range" id="progress" min="0" max="100" value="0" aria-label="Video progress bar" />
+        <div class="buttons">
+          <label for="volume" style="margin-right: 5px;">Volume:</label>
+          <input type="range" id="volume" min="0" max="1" step="0.05" value="1" aria-label="Volume control" />
+          <select id="speed-control" title="Playback Speed">
+            <option value="0.5">0.5x</option>
+            <option value="0.75">0.75x</option>
+            <option value="1" selected>1x</option>
+            <option value="1.5">1.5x</option>
+            <option value="2">2x</option>
+          </select>
+          <button id="loop-btn" title="Loop Playlist"><svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" fill="#FFFFFF"><path d="M0 0h24v24H0z" fill="none"/><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg></button>
+          <button id="loop-once-btn" title="Loop Video"><svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" fill="#FFFFFF"><path d="M0 0h24v24H0z" fill="none"/><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4zm-4-2V9h-1l-2 1v1h1.5v4H13z"/></svg></button>
+          <button id="shuffle-btn" title="Shuffle"><svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path d="M0 0h24v24H0z" fill="none"/><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg></button>
+          <button id="theme-toggle-btn" title="Toggle Theme">
+            <svg id="theme-sun-icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 16 16" width="24px"><path d="M8 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8zm10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0zm-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zm9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708z"/></svg>
+            <svg id="theme-moon-icon" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" style="display: none;"><path d="M0 0h24v24H0z" fill="none"/><path d="M10 2c-1.82 0-3.53.5-5 1.35 2.99 1.73 5 4.95 5 8.65s-2.01 6.92-5 8.65c1.47.85 3.18 1.35 5 1.35 5.52 0 10-4.48 10-10S15.52 2 10 2z"/></svg>
+          </button>
+          <label for="file-input" id="file-input-label" title="Choose Files">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+          </label>
+          <input type="file" id="file-input" accept="video/*" style="display: none;" multiple>
+        </div>
+        <div class="time" id="time-display">00:00 / 00:00</div>
+      </div>
+    </div>
+<div id="playlist" class="playlist-container">
+      <div class="playlist-header">
+        <h4>Playlist</h4>
+        <div style="display: flex; align-items: center;">
+            <button id="clear-playlist-btn" title="Clear Playlist" class="playlist-header-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 0 24 24" width="20px" fill="var(--color-fill-icon-secondary)"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5l-1-1h-5l-1 1H5v2h14V4h-3.5z"/></svg>
+            </button>
+            <label for="file-input" id="add-video-icon-btn" title="Add videos">
+              <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            </label>
+        </div>
+      </div>
+      <div id="playlist-items" style="flex-grow: 1; overflow-y: auto;">
+        <div style="text-align: center; padding: 20px;">Click the '+' icon to start a playlist.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const video = document.getElementById('video');
+    const playPauseBtn = document.getElementById('play-pause');
+    const prevBtn = document.getElementById('prev-video');
+    const nextBtn = document.getElementById('next-video');
+    const skipBackwardBtn = document.getElementById('skip-backward');
+    const skipForwardBtn = document.getElementById('skip-forward');
+    const muteUnmuteBtn = document.getElementById('mute-unmute');
+
+    const pipBtn = document.getElementById('pip-btn');
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
+    const fullscreenIcon = document.getElementById('fullscreen-icon');
+    const exitFullscreenIcon = document.getElementById('exit-fullscreen-icon');
+    const progress = document.getElementById('progress');
+    const volume = document.getElementById('volume');
+    const speedControl = document.getElementById('speed-control');
+    const timeDisplay = document.getElementById('time-display');
+    const fileInput = document.getElementById('file-input');
+    const playlistContainer = document.getElementById('playlist-items');
+    const playIcon = document.getElementById('play-icon');
+    const pauseIcon = document.getElementById('pause-icon');
+    const muteIcon = document.getElementById('mute-icon');
+    const unmuteIcon = document.getElementById('unmute-icon');
+    const loopPlaylistBtn = document.getElementById('loop-btn');
+    const loopVideoBtn = document.getElementById('loop-once-btn');
+    const shuffleBtn = document.getElementById('shuffle-btn');
+    const clearPlaylistBtn = document.getElementById('clear-playlist-btn');
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    const sunIcon = document.getElementById('theme-sun-icon');
+    const moonIcon = document.getElementById('theme-moon-icon');
+
+    // --- Event Listeners ---
+    clearPlaylistBtn.addEventListener('click', () => {
+        playlistFiles = [];
+        originalPlaylistFiles = [];
+        resetPlayer();
+    });
+
+    let playlistFiles = [];
+    let currentVideoIndex = -1;
+    let isLoopingPlaylist = false;
+    let isShuffling = false;
+    let originalPlaylistFiles = [];
+
+    // --- Main Controls ---
+    function skip(seconds) {
+      video.currentTime += seconds;
+    }
+    skipBackwardBtn.addEventListener('click', () => skip(-10));
+    skipForwardBtn.addEventListener('click', () => skip(10));
+
+
+    // --- Picture-in-Picture ---
+    if ('pictureInPictureEnabled' in document) {
+      pipBtn.addEventListener('click', togglePip);
+    } else {
+      pipBtn.style.display = 'none';
+    }
+
+    async function togglePip() {
+      try {
+        if (video !== document.pictureInPictureElement) {
+          await video.requestPictureInPicture();
+        } else {
+          await document.exitPictureInPicture();
+        }
+      } catch (error) {
+        console.error('PiP Error:', error);
+      }
+    }
+
+    video.addEventListener('enterpictureinpicture', () => {
+      pipBtn.classList.add('active');
+    });
+
+    video.addEventListener('leavepictureinpicture', () => {
+      pipBtn.classList.remove('active');
+    });
+
+    // --- Fullscreen ---
+    const videoContainer = document.querySelector('.video-container');
+    
+    fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        videoContainer.requestFullscreen().catch(err => {
+          console.error('Error attempting to enable fullscreen:', err);
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    function updateFullscreenButton() {
+      if (document.fullscreenElement) {
+        fullscreenIcon.style.display = 'none';
+        exitFullscreenIcon.style.display = 'block';
+        fullscreenBtn.classList.add('active');
+      } else {
+        fullscreenIcon.style.display = 'block';
+        exitFullscreenIcon.style.display = 'none';
+        fullscreenBtn.classList.remove('active');
+      }
+    }
+
+    document.addEventListener('fullscreenchange', updateFullscreenButton);
+
+    // Double-click to toggle fullscreen
+    video.addEventListener('dblclick', toggleFullscreen);
+
+    // F11 keyboard shortcut support
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'F11') {
+        e.preventDefault();
+        toggleFullscreen();
+      }
+    });
+
+    // --- Speed Control ---
+    speedControl.addEventListener('change', (e) => {
+      video.playbackRate = e.target.value;
+    });
+
+    // --- Playlist & File Handling ---
+    fileInput.addEventListener('change', (event) => {
+      const newFiles = Array.from(event.target.files);
+      if (newFiles.length > 0) {
+        const wasEmpty = playlistFiles.length === 0;
+        playlistFiles.push(...newFiles);
+        originalPlaylistFiles.push(...newFiles);
+        renderPlaylist();
+        if (wasEmpty) {
+          playVideo(0);
+        }
+      }
+    });
+    
+    function renderPlaylist() {
+      playlistContainer.innerHTML = '';
+      if (playlistFiles.length === 0) {
+          playlistContainer.innerHTML = '<div style="text-align: center; padding: 20px;">Select video files to begin.</div>';
+          return;
+      }
+
+      playlistFiles.forEach((file, index) => {
+        const item = document.createElement('div');
+        item.classList.add('playlist-item');
+        
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'playlist-item-name';
+        nameSpan.textContent = file.name;
+        item.appendChild(nameSpan);
+
+        const deleteBtn = document.createElement('span');
+        deleteBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 0 24 24" width="20px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>';
+        deleteBtn.classList.add('delete-btn');
+        deleteBtn.addEventListener('click', (e) => {
+          e.stopPropagation(); // Prevent the item click from firing
+          deleteFromPlaylist(index);
+        });
+
+        item.addEventListener('click', () => {
+          playVideo(index);
+        });
+
+        item.appendChild(deleteBtn);
+        playlistContainer.appendChild(item);
+      });
+
+      // Update playing styles
+      if (currentVideoIndex !== -1) {
+          const playingItem = playlistContainer.children[currentVideoIndex];
+          if(playingItem) playingItem.classList.add('playing');
+      }
+    }
+
+    function deleteFromPlaylist(index) {
+        playlistFiles.splice(index, 1);
+        originalPlaylistFiles.splice(index, 1);
+
+        if (playlistFiles.length === 0) {
+            resetPlayer();
+            return;
+        }
+
+        if (index === currentVideoIndex) {
+            // The currently playing video was deleted
+            video.pause();
+            // If it was the last one, play the new last one, otherwise play the one at the same index
+            const nextIndex = index >= playlistFiles.length ? playlistFiles.length - 1 : index;
+            playVideo(nextIndex);
+        } else if (index < currentVideoIndex) {
+            // A video before the current one was deleted, so decrement the index
+            currentVideoIndex--;
+        }
+        
+        renderPlaylist();
+    }
+    
+    function resetPlayer() {
+        video.pause();
+        video.src = '';
+        currentVideoIndex = -1;
+        timeDisplay.textContent = '00:00 / 00:00';
+        progress.value = 0;
+        renderPlaylist();
+    }
+
+    function playVideo(index) {
+      if (index < 0 || index >= playlistFiles.length) {
+        resetPlayer();
+        return;
+      }
+      currentVideoIndex = index;
+      const file = playlistFiles[index];
+      const videoURL = URL.createObjectURL(file);
+      video.src = videoURL;
+      video.title = file.name;
+      video.load();
+      video.play();
+
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: file.name,
+        });
+      }
+      
+      renderPlaylist(); // Re-render to update 'playing' class
+    }
+
+    function playNext() {
+      if (playlistFiles.length === 0) return;
+
+      if (isShuffling) {
+        let randomIndex;
+        do {
+            randomIndex = Math.floor(Math.random() * playlistFiles.length);
+        } while (playlistFiles.length > 1 && randomIndex === currentVideoIndex);
+        playVideo(randomIndex);
+      } else {
+        const atTheEnd = currentVideoIndex === playlistFiles.length - 1;
+        if (!atTheEnd) {
+            playVideo(currentVideoIndex + 1);
+        } else if (isLoopingPlaylist) {
+            playVideo(0);
+        }
+      }
+    }
+
+    function playPrevious() {
+      if (playlistFiles.length === 0) return;
+      const prevIndex = (currentVideoIndex - 1 + playlistFiles.length) % playlistFiles.length;
+      playVideo(prevIndex);
+    }
+    
+    nextBtn.addEventListener('click', playNext);
+    prevBtn.addEventListener('click', playPrevious);
+
+    video.addEventListener('ended', playNext);
+
+    loopVideoBtn.title = "Loop Video";
+    loopVideoBtn.addEventListener('click', () => {
+        video.loop = !video.loop;
+        loopVideoBtn.classList.toggle('active', video.loop);
+        if (video.loop) {
+            isLoopingPlaylist = false;
+            loopPlaylistBtn.classList.remove('active');
+            isShuffling = false;
+            shuffleBtn.classList.remove('active');
+        }
+    });
+
+    loopPlaylistBtn.addEventListener('click', () => {
+        isLoopingPlaylist = !isLoopingPlaylist;
+        loopPlaylistBtn.classList.toggle('active', isLoopingPlaylist);
+        if (isLoopingPlaylist) {
+            video.loop = false;
+            loopVideoBtn.classList.remove('active');
+            isShuffling = false;
+            shuffleBtn.classList.remove('active');
+        }
+    });
+
+    shuffleBtn.addEventListener('click', () => {
+        isShuffling = !isShuffling;
+        shuffleBtn.classList.toggle('active', isShuffling);
+        if (isShuffling) {
+            video.loop = false;
+            loopVideoBtn.classList.remove('active');
+            isLoopingPlaylist = false;
+            loopPlaylistBtn.classList.remove('active');
+            shufflePlaylist();
+        } else {
+            playlistFiles = [...originalPlaylistFiles];
+            renderPlaylist();
+        }
+    });
+
+    function shufflePlaylist() {
+        let currentIndex = playlistFiles.length,  randomIndex;
+
+        // While there remain elements to shuffle.
+        while (currentIndex != 0) {
+
+            // Pick a remaining element.
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+
+            // And swap it with the current element.
+            [playlistFiles[currentIndex], playlistFiles[randomIndex]] = [
+            playlistFiles[randomIndex], playlistFiles[currentIndex]];
+        }
+        renderPlaylist();
+    }
+
+
+    function formatTime(seconds) {
+        if (isNaN(seconds)) return '00:00';
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    playPauseBtn.addEventListener('click', () => {
+      if (video.paused || video.ended) {
+        // Don't try to play if there's no source
+        if(video.currentSrc) video.play();
+      } else {
+        video.pause();
+      }
+    });
+
+    video.addEventListener('play', () => {
+      playIcon.style.display = 'none';
+      pauseIcon.style.display = 'inline';
+      playPauseBtn.setAttribute('aria-label', 'Pause');
+    });
+
+    video.addEventListener('pause', () => {
+      playIcon.style.display = 'inline';
+      pauseIcon.style.display = 'none';
+      playPauseBtn.setAttribute('aria-label', 'Play');
+    });
+
+    muteUnmuteBtn.addEventListener('click', () => {
+      video.muted = !video.muted;
+      updateMuteButton();
+    });
+
+    function updateMuteButton() {
+      if (video.muted || video.volume === 0) {
+        muteIcon.style.display = 'inline';
+        unmuteIcon.style.display = 'none';
+        muteUnmuteBtn.setAttribute('aria-label', 'Unmute');
+      } else {
+        muteIcon.style.display = 'none';
+        unmuteIcon.style.display = 'inline';
+        muteUnmuteBtn.setAttribute('aria-label', 'Mute');
+      }
+    }
+
+    volume.addEventListener('input', () => {
+      video.volume = volume.value;
+      video.muted = volume.value == 0;
+      updateMuteButton();
+    });
+
+    video.addEventListener('volumechange', () => {
+      volume.value = video.volume;
+      updateMuteButton();
+    });
+
+    video.addEventListener('loadedmetadata', () => {
+      timeDisplay.textContent = `${formatTime(video.currentTime)} / ${formatTime(video.duration)}`;
+    });
+
+    video.addEventListener('timeupdate', () => {
+      if (!progress.dragging) {
+        const value = (video.currentTime / video.duration) * 100;
+        progress.value = value || 0;
+      }
+      timeDisplay.textContent = `${formatTime(video.currentTime)} / ${formatTime(video.duration)}`;
+    });
+
+    let isDragging = false;
+    progress.addEventListener('mousedown', () => { isDragging = true; });
+    progress.addEventListener('mouseup', () => { isDragging = false; });
+    progress.addEventListener('input', () => {
+      if (video.duration && isDragging) {
+        video.currentTime = (progress.value / 100) * video.duration;
+      }
+    });
+
+
+    // Initialize mute button state on load
+    updateMuteButton();
+
+    // Initialize fullscreen button state
+    updateFullscreenButton();
+
+    // Keyboard accessibility play/pause with space or enter
+    video.addEventListener('keydown', e => {
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        if (video.paused) {
+          if(video.currentSrc) video.play();
+        } else {
+          video.pause();
+        }
+      }
+    });
+
+    // --- Theme Toggler ---
+    function applyTheme(theme) {
+        if (theme === 'light') {
+            document.body.classList.add('light-mode');
+            if(sunIcon) sunIcon.style.display = 'none';
+            if(moonIcon) moonIcon.style.display = 'block';
+        } else {
+            document.body.classList.remove('light-mode');
+            if(sunIcon) sunIcon.style.display = 'block';
+            if(moonIcon) moonIcon.style.display = 'none';
+        }
+    }
+
+    themeToggleBtn.addEventListener('click', () => {
+        const isLight = document.body.classList.contains('light-mode');
+        const newTheme = isLight ? 'dark' : 'light';
+        localStorage.setItem('theme', newTheme);
+        applyTheme(newTheme);
+    });
+
+    // On page load, apply saved theme
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    applyTheme(savedTheme);
+  </script>
+</body>
+</html>

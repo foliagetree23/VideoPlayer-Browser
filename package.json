@@ -1,0 +1,29 @@
+{
+  "name": "videoplayer",
+  "version": "1.0.0",
+  "description": "Video Player Web",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "pkg ."
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "get-port": "^5.1.1",
+    "node-notifier": "^10.0.1",
+    "open": "^8.4.2",
+    "clipboardy": "^2.3.0"
+  },
+  "pkg": {
+    "assets": [
+      "index.html"
+    ],
+    "targets": [
+      "node16-linux-x64",
+      "node16-win-x64",
+      "node16-macos-x64"
+    ]
+  },
+  "author": "",
+  "license": "ISC"
+}
