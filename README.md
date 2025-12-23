@@ -334,7 +334,7 @@ This project follows standard security practices for web applications. Report se
 
 ## 📄 License
 
-This project is licensed under the ISC License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the GNU GPL Version 1 License - see the [LICENSE](LICENSE) file for details.
 
 
 ## 🙏 Acknowledgments
