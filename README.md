@@ -224,11 +224,6 @@ The application includes basic error handling:
 - Browser compatibility checks
 - Fullscreen API error handling
 
-## 📄 License
-
-This project is licensed under the ISC License - see the LICENSE file for details.
-
-
 ## 🤝 Contributing
 
 We welcome contributions! Please read our contributing guidelines before submitting pull requests.
